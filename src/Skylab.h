@@ -11,22 +11,36 @@
 #define PRECIO_PROMETID 40 // precio cada unidad de prometid
 #define PRECIO_SEMPROM 1000 // precio de cada unidad de Semprom
 #define PRECIO_DESECHUM 0.10 // precio cada 100 unidades de Desechum
-
 /**
 * Estructura de los materiales
 */
-typedef int Promerium;
-typedef int Duranium;
-typedef int Desechum;
-
-typedef struct Prometid{
+typedef struct {
   int cantidadPrometium;
   int cantidadEndurium;
-};
+  int unidades;
+}Promerium;
+typedef struct {
+  int cantidadEndurium;
+  int cantidadTerbium;
+  int unidades;
+}Duranium;
+typedef struct {
+  int cantidadTerbium;
+  int cantidadPrometium;
+  int cantidadEndurium;
+  int unidades;
+}Desechum;
 
-typedef struct Semprom{
-  Promerium cantidadPromerium;
-  Duranium cantidadDuranium;
+typedef struct {
+  int cantidadPrometium;
+  int cantidadEndurium;
+  int unidades;
+}Prometid;
+
+typedef struct {
+  int cantidadPromerium;
+  int cantidadDuranium;
   int cantidadPrometid;
-};
+  int unidades;
+}Semprom;
 #endif
