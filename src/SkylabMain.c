@@ -4,7 +4,8 @@
 * En este Archivo esta implementado el metodo principal de nuestro
 * modulo 7 que sera todo el codigo fuente de la emulacion
 * del skylab.
-chuse
+chuse locon
+jsjsksjd
 */
 #include <stdio.h>
 #include <pthread.h>
@@ -17,6 +18,7 @@ semaphore emptyCount = BUFFER_SIZE;
 
 procedure producer() {
     while (true) {
+      
         item = produceItem();
         down(emptyCount);
             down(mutex);
