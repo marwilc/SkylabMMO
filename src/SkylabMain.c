@@ -10,12 +10,18 @@ chuse
 #include <pthread.h>
 #include <semaphore.h>
 #include "Skylab.h"
+#define MAX 3
 
-
-int promerium = 100;
-int endurium = 100;
-int terbium = 100;
-
+// en la posicion 0 del vector estara guardado el material Prometium
+// en la posicion 1 del vector estara guardado el material Endurium
+// en la posicion 2 del vector estara guardado el material Terbium
+int materiaPrima[MAX];
+/*
+* semaforos semPromerium
+* semaforos semDuranium
+* semaforos semPrometid
+*/
+sem_t semPromerium, semDuranium, semPrometid;
 semaphore mutex = 1;
 semaphore fillCount = 0;
 semaphore emptyCount = BUFFER_SIZE;
