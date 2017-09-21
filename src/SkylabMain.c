@@ -11,6 +11,11 @@ jsjsksjd
 #include <semaphore.h>
 #include "Skylab.h"
 
+
+int promerium = 100;
+int endurium = 100;
+int terbium = 100;
+
 semaphore mutex = 1;
 semaphore fillCount = 0;
 semaphore emptyCount = BUFFER_SIZE;
