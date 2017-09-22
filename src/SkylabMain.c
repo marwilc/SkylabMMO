@@ -1,10 +1,9 @@
 /*
-* Author: Marwil Campos
-* Email: marwilcampos@gmail.com
+* Author: Marwil Campos, Manuel Alvarado
+* Email: marwilcampos@gmail.com, chusets@gmail.com
 * En este Archivo esta implementado el metodo principal de nuestro
 * modulo 7 que sera todo el codigo fuente de la emulacion
-* del skylab.
-chuse
+* del skylab
 */
 #include <stdio.h>
 #include <pthread.h>
@@ -37,6 +36,12 @@ sem_t semPromerium, semDuranium, semPrometid,semSemprom, semTransporte;
 void delayerloop(void);
 void cintaTransportadora(void);
 
+/* genera un ramdom para el desechum*/
+
+int generar_dato(void){ return rand()%6;}
+/**
+* este hilo se encarga de simular el transporte de materiales al laboratorio
+*/
 void* transporteHaciaElLaboratorio(void *transporte){
   int contador = MAX;
   sem_wait(&semTransporte);
@@ -45,23 +50,36 @@ void* transporteHaciaElLaboratorio(void *transporte){
     /* se simula el proceso de cinta transportadora tres veces
     * para cada material
     */
+
     cintaTransportadora();
+    int n = generar_dato();
     materiaPrimaLab[i] = materiaPrimaHangar[i];
-    if(i==0)
-      printf("%s\n", "Transporte de Prometium completado");
-
-    if(i==1)
-      printf("%s\n", "Transporte de Endurium completado");
-
-    if(i==2)
-      printf("%s\n", "Transporte de Terbium completado");
-
+    materiaPrimaHangar[i] = 0;
+      if(n >= 2 && n <= 5 ){
+        if(i==0){
+            printf("%s\n", "Transporte de Prometium completado");
+        }
+        if(i==1){
+            printf("%s\n", "Transporte de Endurium completado");
+        }
+        if(i==2){
+            printf("%s\n", "Transporte de Terbium completado");
+        }
+      }else{
+        printf("%s\n", "Material no cumple con los estandares de calidad se convertira en Desechum");
+        materialProducido[4]=materialProducido[4]+materiaPrimaLab[i];
+        materiaPrimaLab[i] = 0;
+    }
   }
   sem_post(&semPromerium);
 }
+
+/*
+* hilo encargado de producir el material promerium
+*/
 void* productorPromerium(void *promerium){
   /**
-  * el while verifica si hay elemntos suficientes  sem_post(&semDuranium);
+  * el while verifica si hay elemntos suficientes
   * para producir el material valioso
   */
   while(true){
@@ -74,12 +92,13 @@ void* productorPromerium(void *promerium){
       printf("%s%d\n", "materia prima prometium: ", materiaPrimaLab[0]);
       printf("%s%d\n", "materia prima Endurium: ", materiaPrimaLab[1]);
       printf("%s%d\n", "materia prima Terbium: ", materiaPrimaLab[2]);
-    }else{
-      sem_post(&semTransporte);
     }
     sem_post(&semDuranium);
   }
 }
+/*
+* hilo encargado de producir el material Duranium
+*/
 void* productorDuranium(void *duranium){
   /**semPrometid
   * el while verifica si hay elemntos suficientes
@@ -95,13 +114,15 @@ void* productorDuranium(void *duranium){
       printf("%s%d\n", "materia prima prometium: ", materiaPrimaLab[0]);
       printf("%s%d\n", "materia prima Endurium: ", materiaPrimaLab[1]);
       printf("%s%d\n", "materia prima Terbium: ", materiaPrimaLab[2]);
-    }else{
-      sem_post(&semTransporte);
     }
     sem_post(&semPrometid);
   }
 
 }
+
+/*
+* hilo encargado de producir el material Prometid
+*/
 void* productorPrometid(void *prometid){
   /**semSemprom
   * el while verifica si hay elemntos suficientes
@@ -118,14 +139,14 @@ void* productorPrometid(void *prometid){
       printf("%s%d\n", "materia prima prometium: ", materiaPrimaLab[0]);
       printf("%s%d\n", "materia prima Endurium: ", materiaPrimaLab[1]);
       printf("%s%d\n", "materia prima Terbium: ", materiaPrimaLab[2]);
-    }else{
-      sem_post(&semTransporte);
     }
     sem_post(&semSemprom);
 
   }
 }
-
+/*
+* hilo encargado de producir el material semprom
+*/
 void* productorSemprom(void *semprom){
   /**
   * el while verifica si hay elemntos suficientes
@@ -144,18 +165,19 @@ void* productorSemprom(void *semprom){
       printf("%s%d\n", "material Promerium : ", materialProducido[0]);
       printf("%s%d\n", "material Endurium: ", materialProducido[1]);
       printf("%s%d\n", "material Prometid: ", materialProducido[2]);
-    }else{
-      sem_post(&semTransporte);
     }
+    sem_post(&semTransporte);
     sem_post(&semPromerium);
   }
 }
+
 int main(int argc, char const *argv[]) {
 
   printf("%s\n"," Welcome to Skylab");
   /**
   * inicializacion de los semaforos
   */
+  srand(time(NULL));
   sem_init(&semTransporte, 0, 1);
   sem_init(&semPromerium, 0, 0);
   sem_init(&semDuranium, 0, 0);
