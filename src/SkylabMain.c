@@ -4,7 +4,7 @@
 * En este Archivo esta implementado el metodo principal de nuestro
 * modulo 7 que sera todo el codigo fuente de la emulacion
 * del skylab.
-chuse
+jsjsksjd
 */
 #include <stdio.h>
 #include <pthread.h>
