@@ -17,14 +17,14 @@ chuse
 // en la posicion 0 del vector estara guardado el material Prometium
 // en la posicion 1 del vector estara guardado el material Endurium
 // en la posicion 2 del vector estara guardado el material Terbium
-int materiaPrima[MAX] = {100,100,100};
+int materiaPrima[MAX] = {1000,1000,1000};
 int materialProducido[MAX_P] = {0,0,0,0,0};
 /*
 * semaforos semPromerium
 * semaforos semDuranium
 * semaforos semPrometid
 */
-sem_t semPromerium, semDuranium, semPrometid;
+sem_t semPromerium, semDuranium, semPrometid,semSemprom;
 
 void* productorPromerium(void *promerium){
   /**
@@ -34,17 +34,16 @@ void* productorPromerium(void *promerium){
   while(true){
     sem_wait(&semPromerium);
     if(materiaPrima[0]>=10 && materiaPrima[1]>=10){
-    materialProducido[0]++;
-    materiaPrima[0] -= 10;
-    materiaPrima[1] -= 10;
-    printf("%s%d\n", "Promerium: ", materialProducido[0]);
-    printf("%s%d\n", "materia prima prometium: ", materiaPrima[0]);
-    printf("%s%d\n", "materia prima Endurium: ", materiaPrima[1]);
-    printf("%s%d\n", "materia prima Terbium: ", materiaPrima[2]);
+      materialProducido[0]++;
+      materiaPrima[0] -= 10;
+      materiaPrima[1] -= 10;
+      printf("%s%d\n", "Promerium: ", materialProducido[0]);
+      printf("%s%d\n", "materia prima prometium: ", materiaPrima[0]);
+      printf("%s%d\n", "materia prima Endurium: ", materiaPrima[1]);
+      printf("%s%d\n", "materia prima Terbium: ", materiaPrima[2]);
     }
     sem_post(&semDuranium);
   }
-
 }
 void* productorDuranium(void *duranium){
   /**semPrometid
@@ -54,20 +53,20 @@ void* productorDuranium(void *duranium){
   while(true){
     sem_wait(&semDuranium);
     if(materiaPrima[1]>=20 && materiaPrima[2]>=10){
-    materialProducido[1]++;
-    materiaPrima[1] -= 20;
-    materiaPrima[2] -= 10;
-    printf("%s%d\n", "Duranium: ", materialProducido[1]);
-    printf("%s%d\n", "materia prima prometium: ", materiaPrima[0]);
-    printf("%s%d\n", "materia prima Endurium: ", materiaPrima[1]);
-    printf("%s%d\n", "materia prima Terbium: ", materiaPrima[2]);
-      }
-      sem_post(&semPrometid);
+      materialProducido[1]++;
+      materiaPrima[1] -= 20;
+      materiaPrima[2] -= 10;
+      printf("%s%d\n", "Duranium: ", materialProducido[1]);
+      printf("%s%d\n", "materia prima prometium: ", materiaPrima[0]);
+      printf("%s%d\n", "materia prima Endurium: ", materiaPrima[1]);
+      printf("%s%d\n", "materia prima Terbium: ", materiaPrima[2]);
+  }
+    sem_post(&semPrometid);
   }
 
 }
 void* productorPrometid(void *prometid){
-  /**
+  /**semSemprom
   * el while verifica si hay elemntos suficientes
   * para producir el material valioso
   */
@@ -75,21 +74,40 @@ void* productorPrometid(void *prometid){
   while(true){
     sem_wait(&semPrometid);
     if(materiaPrima[0]>=20 && materiaPrima[1]>=10){
-    materialProducido[2]++;
-    materiaPrima[0] -= 20;
-    materiaPrima[1] -= 10;
-    printf("%s%d\n", "Prometid: ", materialProducido[2]);
-    printf("%s%d\n", "materia prima prometium: ", materiaPrima[0]);
-    printf("%s%d\n", "materia prima Endurium: ", materiaPrima[1]);
-    printf("%s%d\n", "materia prima Terbium: ", materiaPrima[2]);
-      }
-    sem_post(&semPromerium);
+      materialProducido[2]++;
+      materiaPrima[0] -= 20;
+      materiaPrima[1] -= 10;
+      printf("%s%d\n", "Prometid: ", materialProducido[2]);
+      printf("%s%d\n", "materia prima prometium: ", materiaPrima[0]);
+      printf("%s%d\n", "materia prima Endurium: ", materiaPrima[1]);
+      printf("%s%d\n", "materia prima Terbium: ", materiaPrima[2]);
+    }
+    sem_post(&semSemprom);
 
   }
+}
 
+void* productorSemprom(void *semprom){
+  /**
+  * el while verifica si hay elemntos suficientes
+  * para producir el material valioso
+  */
 
-
-
+  while(true){
+    sem_wait(&semSemprom);
+    if(materialProducido[0]>=5 && materialProducido[1]>=5
+      && materialProducido[2]>=5){
+      materialProducido[3]++;
+      materialProducido[0] -= 5;
+      materialProducido[1] -= 5;
+      materialProducido[2] -= 5;
+      printf("%s%d\n", "Semprom: ", materialProducido[3]);
+      printf("%s%d\n", "material Promerium : ", materialProducido[0]);
+      printf("%s%d\n", "material Endurium: ", materialProducido[1]);
+      printf("%s%d\n", "material Prometid: ", materialProducido[2]);
+    }
+    sem_post(&semPromerium);
+  }
 }
 int main(int argc, char const *argv[]) {
 
@@ -100,16 +118,17 @@ int main(int argc, char const *argv[]) {
   printf("%s%d\n", "materia prima prometium: ", materiaPrima[0]);
   printf("%s%d\n", "materia prima Endurium: ", materiaPrima[1]);
   printf("%s%d\n", "materia prima Terbium: ", materiaPrima[2]);
-  pthread_t semPromerium, semDuranium, semPrometid;
+  pthread_t semPromerium, semDuranium, semPrometid,semSemprom;
 
   pthread_create(&semPromerium, NULL, productorPromerium, NULL);
   pthread_create(&semDuranium, NULL, productorDuranium, NULL);
   pthread_create(&semPrometid, NULL, productorPrometid, NULL);
+  pthread_create(&semSemprom, NULL, productorSemprom, NULL);
 
   pthread_join(semPromerium, NULL);
   pthread_join(semDuranium, NULL);
   pthread_join(semPrometid, NULL);
-
+  pthread_join(semSemprom, NULL);
   pthread_exit(NULL);
 
   return 0;
