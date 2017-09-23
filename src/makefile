@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-I. -Wall
 LIBS =-lpthread
 DEPS = Skylab
-OBJ = SkylabMain.o Skylab.o
+OBJ = SkylabMain.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) $(LIBS)
