@@ -26,6 +26,8 @@
 // en la posicion 2 del vector estara guardado el material Terbium
 int materiaPrimaLab[MAX] = {0,0,0};
 int materiaPrimaHangar[MAX] = {1000,1000,1000};
+
+float Array_Prec[6] = {0.25,0.30,40,1000,0.10};
 /**
 * en la posicion 0 del vector materialProducido estara guardado el Promerium
 * en la posicion 1 del vector estara guardado el Duranium
@@ -34,7 +36,11 @@ int materiaPrimaHangar[MAX] = {1000,1000,1000};
 * en la posicion 4 del vector estara guardado el Desechum
 */
 int materialProducido[MAX_P] = {0,0,0,0,0};
-
+struct Parametros_Nec{
+	int Array_Int[15];
+	int Pos;
+	int Tipos_MP;
+};
 /*
 * semaforos semPromerium
 * semaforos semDuranium
@@ -42,12 +48,15 @@ int materialProducido[MAX_P] = {0,0,0,0,0};
 * semaforos semSemprom
 */
 sem_t semPromerium, semDuranium, semPrometid,semSemprom, semTransporte;
+sem_t Mat_Ref, calPromerium, calDuranium, calPrometid, calSemprom, calDesechum;
+
+
 void delayerloop(void);
 void cintaTransportadora(void);
 
 /* genera un ramdom para el desechum*/
 
-int generar_dato(void){ return rand()%6;}
+int generar_dato(void){ return (rand()%6);}
 /**
 * este hilo se encarga de simular el transporte de materiales al laboratorio
 */
@@ -57,7 +66,6 @@ void* transporteHaciaElLaboratorio(void *transporte){
 
   while(true){
     sem_wait(&semTransporte);
-
       printf("%s\n","Transportando materiales al Skylab: " );
       for (int i = 0; i < contador; i++) {
           /* se simula el proceso de cinta transportadora tres veces
@@ -80,12 +88,55 @@ void* transporteHaciaElLaboratorio(void *transporte){
             }
           }else{
             printf("%s\n", "Material no cumple con los estandares de calidad se convertira en Desechum");
-            materialProducido[4]=materialProducido[4]+materiaPrimaLab[i];
-            materiaPrimaLab[i] = 0;
+            materialProducido[4]=materialProducido[4]+ materiaPrimaLab[i];
+            materiaPrimaLab[i] = materiaPrimaLab[i] = 0;
+            sem_post(&calDesechum);
           }
         }
+        
       sem_post(&semPromerium);
     }
+}
+
+void* calcular_Desechum(void *arg){
+	float X;
+	int i = 0;
+	int N = 0;
+	double NP;
+	int y;
+	float Precio_Actual;
+	struct Parametros_Nec *P = (struct Parametros_Nec *)arg;
+	while(true){
+	sem_wait(&calDesechum);
+	N = 0;
+	NP=0;
+	Precio_Actual=0;
+	if(materialProducido[4] != 0){
+	//for (i = 0; i < MAX_P; i++){	{
+	P->Array_Int[4] = materialProducido[4];
+	y = (P->Array_Int[4]/100)*Array_Prec[4];
+	printf("\n\n");
+			
+	//}
+		
+	for (i = 0; i < P->Tipos_MP; i++)		{
+		N = N + materialProducido[i]; /// Cantidad Total de Materia Refinada
+	}
+	
+	printf("Nombre: Desechum N: %d Cant Unidades: %d Cant Tipos: %d \n",N,P->Array_Int[4],(P->Tipos_MP));
+	NP = N / (P->Tipos_MP);
+	
+	X = (P->Array_Int[4])-((NP)*(NP));
+	
+	printf("Precio: %f X: %f NP: %f\n",Array_Prec[4],X,NP);
+	
+	Precio_Actual = (y) - (y*X);
+	printf("Precio Actual: %f\n\n",Precio_Actual);
+	printf("\n");
+	}
+	sem_post(&semTransporte);
+    }
+	
 }
 
 
@@ -108,8 +159,47 @@ void* productorPromerium(void *promerium){
       printf("%s%d\n", "materia prima Endurium: ", materiaPrimaLab[1]);
       printf("%s%d\n", "materia prima Terbium: ", materiaPrimaLab[2]);
     }
-    sem_post(&semDuranium);
+    
+    sem_post(&calPromerium);
   }
+}
+
+void* calcular_Promerium(void *arg){
+	float X;
+	int i = 0;
+	int N = 0;
+	double NP;
+	float Precio_Actual;
+	struct Parametros_Nec *P = (struct Parametros_Nec *)arg;
+	while(true){
+	sem_wait(&calPromerium);
+	N = 0;
+	NP=0;
+	Precio_Actual=0;
+	if(materialProducido[0] != 0){
+	//for (i = 0; i < MAX_P; i++){	{
+		P->Array_Int[0] = materialProducido[0];
+		printf("\n\n");
+	//}
+		
+	for (i = 0; i < P->Tipos_MP; i++)		{
+		N = N + materialProducido[i]; /// Cantidad Total de Materia Refinada
+	}
+	
+	printf("Nombre: Promerium N: %d Cant Unidades: %d Cant Tipos: %d \n",N,P->Array_Int[0],(P->Tipos_MP));
+	NP = (N) / (P->Tipos_MP);
+	
+	X = (P->Array_Int[0])-((NP)*(NP));
+	
+	printf("Precio: %f X: %f NP: %f\n",Array_Prec[0],X,NP);
+	
+	Precio_Actual = (Array_Prec[0]) - ((Array_Prec[0])*X);
+	printf("Precio Actual: %f\n\n",Precio_Actual);
+	printf("\n");
+	}
+	sem_post(&semDuranium);
+    }
+	
 }
 /*
 * hilo encargado de producir el material Duranium
@@ -130,9 +220,50 @@ void* productorDuranium(void *duranium){
       printf("%s%d\n", "materia prima Endurium: ", materiaPrimaLab[1]);
       printf("%s%d\n", "materia prima Terbium: ", materiaPrimaLab[2]);
     }
-    sem_post(&semPrometid);
+    
+    sem_post(&calDuranium);
   }
 
+}
+
+void* calcular_Duranium(void *arg){
+	float X;
+	int i = 0;
+	int N = 0;
+	double NP;
+	float Precio_Actual;
+	struct Parametros_Nec *P = (struct Parametros_Nec *)arg;
+	while(true){
+	sem_wait(&calDuranium);
+	N = 0;
+	NP=0;
+	Precio_Actual=0;
+	if(materialProducido[1] != 0){
+	//for (i = 0; i < MAX_P; i++){	{
+	P->Array_Int[1] = materialProducido[1];
+	printf("\n\n");
+			
+	//}
+		
+	for (i = 0; i < P->Tipos_MP; i++)		{
+		N = N + materialProducido[i]; /// Cantidad Total de Materia Refinada
+	}
+	
+	
+	printf("Nombre: Duranium N: %d Cant Unidades: %d Cant Tipos: %d \n",N,P->Array_Int[1],(P->Tipos_MP));
+	NP = (N) / (P->Tipos_MP);
+	
+	X = (P->Array_Int[1])-((NP)*(NP));
+	
+	printf("Precio: %f X: %f NP: %f\n",Array_Prec[1],X,NP);
+	
+	Precio_Actual = (Array_Prec[1]) - ((Array_Prec[1])*X);
+	printf("Precio Actual: %f\n\n",Precio_Actual);
+	printf("\n");
+	}
+	sem_post(&semPrometid);
+    }
+	
 }
 
 /*
@@ -155,9 +286,49 @@ void* productorPrometid(void *prometid){
       printf("%s%d\n", "materia prima Endurium: ", materiaPrimaLab[1]);
       printf("%s%d\n", "materia prima Terbium: ", materiaPrimaLab[2]);
     }
-    sem_post(&semSemprom);
+    
+    sem_post(&calPrometid);
 
   }
+}
+
+void* calcular_Prometid(void *arg){
+	float X;
+	int i = 0;
+	int N = 0;
+	double NP;
+	float Precio_Actual;
+	struct Parametros_Nec *P = (struct Parametros_Nec *)arg;
+	while(true){
+	sem_wait(&calPrometid);
+	N = 0;
+	NP=0;
+	Precio_Actual=0;
+	if(materialProducido[2] != 0){
+	//for (i = 0; i < MAX_P; i++){	{
+	P->Array_Int[2] = materialProducido[2];
+	printf("\n\n");		
+	//}
+		
+	for (i = 0; i < P->Tipos_MP; i++)		{
+		N = N + materialProducido[i]; /// Cantidad Total de Materia Refinada
+	}
+	
+	
+	printf("Nombre: Prometid N: %d Cant Unidades: %d Cant Tipos: %d \n",N,P->Array_Int[2],(P->Tipos_MP));
+	NP = (N) / (P->Tipos_MP);
+
+	X = (P->Array_Int[2])-((NP)*(NP));
+	
+	printf("Precio: %f X: %f NP: %f\n",Array_Prec[2],X,NP);
+	
+	Precio_Actual = (Array_Prec[2]) - ((Array_Prec[2])*X);
+	printf("Precio Actual: %f\n\n",Precio_Actual);
+	printf("\n");
+	}
+	sem_post(&semSemprom);
+    }
+	
 }
 /*
 * hilo encargado de producir el material semprom
@@ -181,9 +352,49 @@ void* productorSemprom(void *semprom){
       printf("%s%d\n", "material Endurium: ", materialProducido[1]);
       printf("%s%d\n", "material Prometid: ", materialProducido[2]);
     }
-    sem_post(&semTransporte);
+    
+    
+    sem_post (&calSemprom);
+    
     //sem_post(&semPromerium);
   }
+}
+void* calcular_Semprom(void *arg){
+	float X;
+	int i;
+	double NP;
+	float Precio_Actual;
+	struct Parametros_Nec *P = (struct Parametros_Nec *)arg;
+	while(true){
+	sem_wait(&calSemprom);
+	int N = 0;
+	NP=0;
+	Precio_Actual=0;
+	if(materialProducido[3] != 0){
+	//for (i = 0; i < MAX_P; i++){	{
+		P->Array_Int[3] = materialProducido[3];
+		printf("%d %d %d %d %d ", materialProducido[0],materialProducido[1],materialProducido[2],materialProducido[3],materialProducido[4]);		
+	//}
+		
+	for (i = 0; i < P->Tipos_MP; i++)		{
+		N = N + materialProducido[i]; /// Cantidad Total de Materia Refinada
+	}
+	
+	
+	printf("Nombre: Semprom N: %d Cant Unidades: %d Cant Tipos: %d \n",N,P->Array_Int[3],(P->Tipos_MP));
+	NP = (N)/(P->Tipos_MP);
+	
+	X = (P->Array_Int[3])-((NP)*(NP));
+	
+	printf("Precio: %f X: %f NP: %f\n",Array_Prec[3],X,NP);
+	
+	Precio_Actual = (Array_Prec[3]) - ((Array_Prec[3])*X);
+	printf("Precio Actual: %f\n\n",Precio_Actual);
+	printf("\n");
+	}
+	sem_post(&semTransporte);
+    }
+	
 }
 
 
